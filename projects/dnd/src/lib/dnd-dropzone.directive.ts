@@ -177,7 +177,7 @@ export class DndDropzoneDirective implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.checkAndUpdatePlaceholderPosition(event);
+    const positionData = this.checkAndUpdatePlaceholderPosition(event);
 
     const dropEffect = getDropEffect(event, this.dndEffectAllowed);
 
@@ -192,7 +192,7 @@ export class DndDropzoneDirective implements AfterViewInit, OnDestroy {
     // set the drop effect
     setDropEffect(event, dropEffect);
 
-    this.dndDragover.emit(event);
+    this.dndDragover.emit({ ...event, ...positionData });
 
     this.renderer.addClass(
       this.elementRef.nativeElement,
@@ -327,9 +327,12 @@ export class DndDropzoneDirective implements AfterViewInit, OnDestroy {
     }
   }
 
-  private checkAndUpdatePlaceholderPosition(event: DragEvent): void {
+  private checkAndUpdatePlaceholderPosition(event: DragEvent): {
+    directChildId: string;
+    positionPlaceholderBeforeDirectChild: boolean;
+  } | null {
     if (this.placeholder === null) {
-      return;
+      return null;
     }
 
     // make sure the placeholder is in the DOM
@@ -348,7 +351,7 @@ export class DndDropzoneDirective implements AfterViewInit, OnDestroy {
 
     // early exit if no direct child or direct child is placeholder
     if (directChild === null || directChild === this.placeholder) {
-      return;
+      return null;
     }
 
     const positionPlaceholderBeforeDirectChild =
@@ -377,6 +380,11 @@ export class DndDropzoneDirective implements AfterViewInit, OnDestroy {
         );
       }
     }
+
+    return {
+      directChildId: directChild.id,
+      positionPlaceholderBeforeDirectChild,
+    };
   }
 
   private getPlaceholderIndex(): number | undefined {
